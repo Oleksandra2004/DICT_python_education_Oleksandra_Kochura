@@ -1,0 +1,1 @@
+print("Hello! My name is MiMi \nI was created in 2021")
