@@ -17,4 +17,16 @@ print("Youre age is " +str(age)+ "; that's a good time to start programming!")
 print("Now I will prove to you that I can count to any numbr you want.")
 for number_1 in range(int(input())+1):
     print(str(number_1) + "!")
-print("Copleted, have a nice day!")
+print("Let's test your programming knowledge.")
+print("Why do we use methods?")
+print("1. To repeat a statement multipl times.")
+print("2. To decompose a program into several small subroutnes.")
+print("3. To detrmine the execution time of a program.")
+print("4. To interrupt the execution of a program.")
+test_1 = 0
+while test_1 != 2:
+    test_1 = int(input())
+    if test_1 == 2:
+        print("Congratulations, have a nice day!")
+    else:
+        print("Please, try again.")
