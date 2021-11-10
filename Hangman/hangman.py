@@ -1,13 +1,21 @@
-print("HANGMAN")
-print("The game will be available soon.")
 import random
-word_list = ["python", "java", "javascript", "php"]
-word_r = random.choice(word_list)
-word_1 = list(word_r)
-word_2 = word_1[0:3]
-word_3 = "".join(word_2)
-hidden_word = str(input("Guess the word " + word_3 + ": "))
-if hidden_word == word_r:
-    print("You survived!")
-else:
-    print("You lost!")
+print("HANGMAN")
+words = ["python", "java", "javascript", "php"]
+word_r = random.choice(words)
+word_list = list(word_r)
+str_null = len(word_r) * "-"
+list_null = list(str_null)
+for i in range(10):
+    enter_letter = str(input("Input a letter: "))
+    if enter_letter in word_list:
+        if word_list.count(enter_letter) >= 2:
+            index = word_list.index(enter_letter)
+            list_null[index] = enter_letter
+            word_list[index] = "-"
+        index = word_list.index(enter_letter)
+        list_null[index] = enter_letter
+    else:
+        print("That letter doesn't appear in the word")
+    print(''.join(list_null))
+print("Thanks for playing!")
+print("We'll see how well you did in the next stage")
