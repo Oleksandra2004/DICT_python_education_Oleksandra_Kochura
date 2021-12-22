@@ -1,55 +1,97 @@
 import math
+import argparse
 
 
-def number_monthly():
-    p = float(input("Enter the loan principal:\n> "))
-    m = float(input("Enter the monthly payment:\n> "))
-    i = float(input("Enter the loan interest:\n> ")) / 1200
-    num = (m / (m - (i * p)))
-    number_1 = math.log(num, (1 + i))
-    number = math.ceil(number_1)
-    if number % 12 != 0:
-        print(f"It will take {number // 12} years and {number % 12} months to repay this loan!")
-    elif number % 12 == 0:
-        print(f"It will take {number / 12} years to repay this loan!")
+parser = argparse.ArgumentParser(description="CreditCalculator 4-th stage")
+parser.add_argument('--type', '-t', choices=["diff", "annuity"],
+                    help="Choose type of calculation. Possible values 'diff' or 'annuity'")
+parser.add_argument('--principal', type=int)
+parser.add_argument('--periods', type=int)
+parser.add_argument('--interest', type=float, help="is specified without a percent sign")
+parser.add_argument('--payment', type=int)
+args = parser.parse_args()
+
+type_of_calc = args.type
+principal = args.principal
+periods = args.periods
+interest = args.interest
+payment = args.payment
+
+
+def check_type(type_):
+    if type_ is not None:
+        return type_ if type_ in ["diff", "annuity"] else False
+
+
+def check_pay_error(type_, payment_):
+    return False if check_type(type_) == "diff" and payment_ is not None else True
+
+
+def check_count_params():
+    count = 0
+    for param in args.__dict__.values():
+        if param is not None:
+            count += 1
+    return False if count < 4 else True
+
+
+def check_negative():
+    params = [principal, payment, periods, interest]
+    count_greater_zero = 0
+    non_param = 0
+    for param in params:
+        if param is None:
+            non_param += 1
+        elif param > 0:
+            count_greater_zero += 1
+    return True if len(params) - non_param == count_greater_zero else False
+
+
+def overpayment(payment_, periods_, principal_):
+    return payment_ * periods_ - principal_
+
+
+def annuity_payment(principal_, payment_, periods_):
+    i = interest / 1200
+    if principal_ is None:
+        principal_ = math.floor(payment_ / ((i * pow(1 + i, periods_)) / (pow(1 + i, periods_) - 1)))
+        print(f"Your loan principal = {principal_}!\nOverpayment = {overpayment(payment_, periods_, principal_)}")
+    elif periods_ is None:
+        periods_ = math.ceil(math.log((payment_ / (payment_ - i * principal_)), 1 + i))
+        year, month = divmod(periods_, 12)
+        if periods_ % 12 != 0:
+            print(f"It will take {year} years and {month} months to repay this loan!")
+        elif periods_ % 12 == 0:
+            print(f"It will take {year} years to repay this loan!")
+        else:
+            print(f"It will take {month} months to repay this loan!")
+        print(f"Overpayment = {overpayment(payment_, periods_, principal_)}")
     else:
-        print(f"It will take {number} months to repay this loan!")
+        payment_ = math.ceil(principal_ * (i * pow(1 + i, periods_)) / (pow(1 + i, periods_) - 1))
+        print(f"Your annuity payment = {payment_}!\nOverpayment = {overpayment(payment_, periods_, principal_)}")
 
 
-def loan():
-    a = float(input("Enter the annuity payment:\n> "))
-    n = float(input("Enter the number of periods:\n> "))
-    i = float(input("Enter the loan interest:\n> ")) / 1200
-    num = a / ((i * math.pow((1 + i), n)) / (math.pow((1 + i), n) - 1))
-    print(f"Your loan principal = {round(num)}!")
+def diff(principal_, periods_):
+    overpayment_ = 0
+    i = interest / 1200
+    for count in range(1, periods_ + 1):
+        dif_payment = math.ceil((principal_ / periods_) + i *
+                                (principal_ - ((principal_ * (count - 1)) / periods_)))
+        overpayment_ += dif_payment - principal_ // periods_
+        print(f"Month {count}: payment is {dif_payment}")
+    print(f"\nOverpayment = {overpayment_}")
 
 
-def annuity_monthly():
-    p = int(input("Enter the loan principal:\n> "))
-    n = int(input("Enter the number of periods:\n> "))
-    i = int(input("Enter the loan interest:\n> ")) / 1200
-    num = p * ((i * math.pow((1 + i), n)) / (math.pow((1 + i), n) - 1))
-    print(f"Your monthly payment = {math.ceil(num)}!")
-
-
-def init():
-    print("What do you want to calculate?")
-    user = input("type 'n' for number of monthly payments,\n"
-                 "type 'a' for annuity monthly payment amount,\n"
-                 "type 'p' for the loan principal:\n> ")
-    main(user)
-
-
-def main(user_input):
-    if user_input == "n":
-        number_monthly()
-    elif user_input == "p":
-        loan()
-    elif user_input == "a":
-        annuity_monthly()
+def main():
+    if check_pay_error(type_of_calc, payment) and check_count_params() \
+            and check_negative() and interest is not None:
+        if type_of_calc == "diff":
+            diff(principal, periods)
+        else:
+            annuity_payment(principal, payment, periods)
     else:
-        print("You type incorrect word")
-        init()
+        print("Incorrect parameters")
+        exit()
 
 
-init()
+main()
