@@ -1,88 +1,138 @@
-# основные переменные
-water = 400
-milk = 540
-beans = 120
-cups = 9
-money = 550
+import collections
+import enum
 
 
-def init(water_s, milk_s, beans_s, cups_s, money_s):
-    print("The coffee machine has:\n" + str(water_s) + " of water\n"
-          + str(milk_s) + " of milk\n" + str(beans_s)
-          + " of coffee beans\n" + str(cups_s) + " of disposable cups\n"
-          + str(money_s) + " of money\n")
+class Action(enum.Enum):
+    BUY = "buy"
+    FILL = "fill"
+    TAKE = "take"
+    EXIT = "exit"
+    REMAINING = "remaining"
 
 
-def espresso():
-    water_espresso = water - 250
-    milk_espresso = milk
-    beans_espresso = beans - 16
-    cups_espresso = cups - 1
-    money_espresso = money + 4
-    init(water_espresso, milk_espresso, beans_espresso,
-         cups_espresso, money_espresso)
+def take_action():
+    possible_values = ", ".join([action.value for action in Action])
+    while True:
+        answer = input(f"Write action {possible_values}:\n")
+        try:
+            return Action(answer)
+        except ValueError:
+            print(f"{answer} is not valid action")
 
 
-def latte():
-    water_latte = water - 350
-    milk_latte = milk - 75
-    beans_latte = beans - 20
-    cups_latte = cups - 1
-    money_latte = money + 7
-    init(water_latte, milk_latte, beans_latte,
-         cups_latte, money_latte)
+def selected_drink():
+    valid_drinks = {1: "espresso", 2: "latte", 3: "cappuccino", 9: "back to main menu"}
+    possible_values = ", ".join(f"{value}. {name}" for value, name in sorted(valid_drinks.items()))
+    while True:
+        user_answer = input(f"What do you want to buy? ({possible_values}):\n")
+        try:
+            value = int(user_answer)
+            if value in valid_drinks:
+                return value
+            print(f"This answer is not valid: {user_answer}")
+        except ValueError:
+            print(f"This is not a number: {user_answer}")
 
 
-def cappuccino():
-    water_cappuccino = water - 200
-    milk_cappuccino = milk - 100
-    beans_cappuccino = beans - 12
-    cups_cappuccino = cups - 1
-    money_cappuccino = money + 6
-    init(water_cappuccino, milk_cappuccino, beans_cappuccino,
-         cups_cappuccino, money_cappuccino)
+def take_quantity(msg):
+    while True:
+        answer = input(msg + "\n")
+        try:
+            value = int(answer)
+            if value >= 0:
+                return value
+            print(f"This answer is not valid {answer}")
+        except ValueError:
+            print(f"This is not a number {answer}")
 
 
-def fill():
-    print("Write how many ml of water you want to add:")
-    water_user = int(input("> "))
-    print("Write how many ml of milk you want to add:")
-    milk_user = int(input("> "))
-    print("Write how many grams of coffee beans you want to add:")
-    beans_user = int(input("> "))
-    print("Write how many disposable coffee cups you want to add:")
-    cups_user = int(input("> "))
-    water_fill = water + water_user
-    milk_fill = milk + milk_user
-    beans_fill = beans + beans_user
-    cups_fill = cups + cups_user
-    init(water_fill, milk_fill, beans_fill, cups_fill, money)
+Flow = collections.namedtuple("Flow", "water milk beans cups money")
 
 
-def take():
-    print("I gave you " + str(money))
-    money_take = money - money
-    init(water, milk, beans, cups, money_take)
+class NotEnoughSupplyError(Exception):
+    def __init__(self, supply):
+        msg = f"Sorry, not enough {supply}"
+        super(NotEnoughSupplyError, self).__init__(msg)
 
 
-def play():
-    init(water, milk, beans, cups, money)
-    print("Write action (buy, fill, take):")
-    user = (input("> "))
-    if user == "buy":
-        print("What do you want to buy? 1 - espresso,"
-              " 2 - latte, 3 - cappuccino:")
-        buy_coffee = int(input("> "))
-        if buy_coffee == 1:
-            espresso()
-        elif buy_coffee == 2:
-            latte()
-        elif buy_coffee == 3:
-            cappuccino()
-    elif user == "fill":
-        fill()
-    elif user == "take":
-        take()
+class CoffeeMachine:
+
+    def __init__(self):
+        self.water = 400
+        self.milk = 540
+        self.beans = 120
+        self.cups = 9
+        self.money = 550
+        self.running = True
+
+    def execute_action(self, action):
+        if action == Action.BUY:
+            self.buy()
+        elif action == Action.FILL:
+            self.fill()
+        elif action == Action.TAKE:
+            self.take()
+        elif action == Action.REMAINING:
+            self.display_remaining()
+        elif action == Action.EXIT:
+            self.running = False
+        else:
+            raise NotImplementedError(action)
+
+    def available_check(self, flow):
+        if self.water - flow.water < 0:
+            raise NotEnoughSupplyError("water")
+        elif self.milk - flow.milk < 0:
+            raise NotEnoughSupplyError("milk")
+        elif self.beans - flow.beans < 0:
+            raise NotEnoughSupplyError("coffee beans")
+        elif self.cups - flow.cups < 0:
+            raise NotEnoughSupplyError("disposable cups")
+
+    def buy(self):
+        drink = selected_drink()
+        if drink == 9:
+            return
+        espresso_cost = Flow(250, 0, 16, 1, 4)
+        latte_cost = Flow(350, 75, 20, 1, 7)
+        cappuccino_cost = Flow(200, 100, 12, 1, 6)
+        flow = {1: espresso_cost, 2: latte_cost, 3: cappuccino_cost}[drink]
+        try:
+            self.available_check(flow)
+        except NotEnoughSupplyError as exception:
+            print(exception)
+        else:
+            print("I've have enough resources, making you a coffee!")
+            self.water -= flow.water
+            self.milk -= flow.milk
+            self.beans -= flow.beans
+            self.cups -= flow.cups
+            self.money += flow.money
+
+    def fill(self):
+        self.water += take_quantity("Write how many ml of water do you want to add:")
+        self.milk += take_quantity("Write how many ml of milk do you want to add:")
+        self.beans += take_quantity("Write how many grams of coffee beans do you want to add:")
+        self.cups += take_quantity("Write how many disposable cups do you want to add:")
+
+    def take(self):
+        print(f"I'v gave you {self.money}")
+        self.money = 0
+
+    def display_remaining(self):
+        print("The coffee machine has:")
+        print(f"{self.water} of water")
+        print(f"{self.milk} of milk")
+        print(f"{self.beans} of coffee beans")
+        print(f"{self.cups} of disposable cups")
+        print(f"{self.money} of money")
 
 
-play()
+def main():
+    machine = CoffeeMachine()
+    while machine.running:
+        action = take_action()
+        machine.execute_action(action)
+
+
+main()
