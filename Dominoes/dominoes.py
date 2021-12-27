@@ -23,7 +23,7 @@ def shuffle_dominoes(dominoes, player, cpu):
     return dominoes, player, cpu
 
 
-def snake_check(player, cpu):
+def pick_first_player(player, cpu):
     player_max = max([[x, y] for x, y in player])
     cpu_max = max([[x, y] for x, y in cpu])
     if player_max > cpu_max:
@@ -70,14 +70,49 @@ def interface():
     print(game_status(status))
 
 
+def verify_move(choice, dominos):
+    side = choice
+    choice = abs(choice) - 1
+    left_current, right_current = dominos[choice][0], dominos[choice][1]
+    left_snake, right_snake = domino_snake[0][0], domino_snake[-1][1]
+    if right_current == right_snake and side > 0:
+        dominos[choice].reverse()
+        return choice
+    elif left_current == left_snake and side < 0:
+        dominos[choice].reverse()
+        return choice
+    elif right_current == left_snake and side < 0:
+        return choice
+    elif left_current == right_snake and side > 0:
+        return choice
+    else:
+        return None
+
+
+def validate_player(status_, cpu_excludes):
+    if status_ == status_set.get(1):
+        return input()
+    else:
+        choice = cpu_rand_choice()
+        while choice in cpu_excludes and cpu_dominoes:
+            choice = cpu_rand_choice()
+        return choice
+
+
+def cpu_rand_choice():
+    return random.randint(-len(cpu_dominoes), len(cpu_dominoes))
+
+
 def side_of_the_snake(choice, dominos):
+    global status
+    cpu_choices = set()
+    count = 0
     while True:
         try:
             choice = int(choice)
             if abs(choice) <= len(dominos) != 0:
                 if choice < 0:
-                    choice = abs(choice) - 1
-                    domino_snake.insert(0, dominos.pop(choice))
+                    domino_snake.insert(0, dominos.pop(verify_move(choice, dominos)))
                     break
                 elif choice == 0:
                     if len(stock_pieces) > 0:
@@ -87,14 +122,26 @@ def side_of_the_snake(choice, dominos):
                     else:
                         raise ValueError
                 else:
-                    choice -= 1
-                    domino_snake.append(dominos.pop(choice))
+                    domino_snake.append(dominos.pop(verify_move(choice, dominos)))
                     break
             else:
                 raise ValueError
         except ValueError:
-            print("Invalid input. Please try again.")
-            choice = input()
+            if status == status_set.get(1) and count == 0:
+                print("Invalid input. Please try again.")
+            if count > 0:
+                status = status_set.get(5)
+                break
+            count += 1
+            choice = validate_player(status, cpu_choices)
+            continue
+        except TypeError:
+            if status == status_set.get(2):
+                cpu_choices.add(choice)
+            else:
+                print("Illegal move. Please try again.")
+            choice = validate_player(status, cpu_choices)
+            continue
 
 
 def player_move():
@@ -130,7 +177,7 @@ status_set = {1: "player", 2: "cpu", 3: "player_win", 4: "computer_win", 5: "dra
 stock_pieces = generate_stock()
 player_dominoes, cpu_dominoes = split_dominoes(stock_pieces), \
                                 split_dominoes(stock_pieces)
-status, domino_snake = snake_check(player_dominoes, cpu_dominoes)
+status, domino_snake = pick_first_player(player_dominoes, cpu_dominoes)
 
 
 def main():
@@ -149,4 +196,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
