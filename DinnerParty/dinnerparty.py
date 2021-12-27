@@ -1,6 +1,16 @@
 list_friends = []
 
 
+def total_amount(count):
+    try:
+        print("Enter the total amount")
+        total_amount_ = int(input("> "))
+        amount = round((total_amount_ / count), 2)
+        return amount
+    except ValueError:
+        print("You should enter numbers!")
+
+
 def main():
     try:
         print("Enter the number of friends joining (including you):")
@@ -11,7 +21,8 @@ def main():
                 name = input("> ")
                 list_friends.append(name)
                 count -= 1
-            dict_friends = dict.fromkeys(list_friends, 0)
+            amount = total_amount(len(list_friends))
+            dict_friends = dict.fromkeys(list_friends, amount)
             print(dict_friends)
         else:
             print("No one is joining for the party!")
