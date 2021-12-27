@@ -1,4 +1,20 @@
+import random
+
+
 list_friends = []
+
+
+def lucky(dict_):
+    print("Do you want yo use the 'Who is lucky?' feature? Write Yes/No:")
+    lucky_ = input("> ")
+    if lucky_ == "Yes" or lucky_ == "No":
+        if lucky_ == "Yes":
+            dict_lucky = random.choice(list(dict_.keys()))
+            print(f"{dict_lucky} is the lucky one!")
+        else:
+            print("No one is going to be lucky")
+    else:
+        print("You should enter Yes or No!")
 
 
 def total_amount(count):
@@ -23,7 +39,7 @@ def main():
                 count -= 1
             amount = total_amount(len(list_friends))
             dict_friends = dict.fromkeys(list_friends, amount)
-            print(dict_friends)
+            lucky(dict_friends)
         else:
             print("No one is joining for the party!")
     except ValueError:
