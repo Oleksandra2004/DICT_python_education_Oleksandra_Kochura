@@ -28,17 +28,19 @@ def snake_check(player, cpu):
 
 def game_status(status_):
     if status_ == "computer":
-        return "computer"
+        return "Status: Computer is about to make a move. Press Enter to continue..."
     elif status_ == "player":
-        return "player"
+        return "Status: It's your turn to make a move. Enter your command."
 
 
 def interface():
-    print(f"Stock pieces: {stock_pieces}")
-    print(f"Computer pieces: {cpu_dominoes}")
-    print(f"Player pieces: {player_dominoes}")
-    print(f"Domino snake: {domino_snake}")
-    print(f"Status: {game_status(status)}")
+    header_count = 70
+    print("=" * header_count)
+    print(f"Stock size: {len(stock_pieces)}")
+    print(f"Computer pieces: {len(cpu_dominoes)}\n")
+    print(f"{domino_snake}\n")
+    print(f"Your pieces:", *[f'{i}:{domino}' for i, domino in enumerate(sorted(player_dominoes), 1)], sep="\n")
+    print(game_status(status))
 
 
 stock_pieces = generate_stock()
