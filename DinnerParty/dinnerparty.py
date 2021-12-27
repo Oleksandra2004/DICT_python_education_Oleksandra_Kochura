@@ -1,28 +1,9 @@
 import random
 
 
-list_friends = []
-
-
-def lucky(dict_):
-    print("Do you want yo use the 'Who is lucky?' feature? Write Yes/No:")
-    lucky_ = input("> ")
-    if lucky_ == "Yes" or lucky_ == "No":
-        if lucky_ == "Yes":
-            dict_lucky = random.choice(list(dict_.keys()))
-            print(f"{dict_lucky} is the lucky one!")
-        else:
-            print("No one is going to be lucky")
-    else:
-        print("You should enter Yes or No!")
-
-
-def total_amount(count):
+def total_amount(count, total):
     try:
-        print("Enter the total amount")
-        total_amount_ = int(input("> "))
-        amount = round((total_amount_ / count), 2)
-        return amount
+        return round((total / count), 2)
     except ValueError:
         print("You should enter numbers!")
 
@@ -31,19 +12,35 @@ def main():
     try:
         print("Enter the number of friends joining (including you):")
         count = int(input("> "))
-        if 0 < count:
-            print("Enter the name of every friends (including you), each on a new line:")
-            while count != 0:
-                name = input("> ")
-                list_friends.append(name)
-                count -= 1
-            amount = total_amount(len(list_friends))
+        msg = "\nNo one is joining your party"
+        assert count > 0, msg
+
+        print("Enter the name of every friends (including you), each on a new line:")
+        list_friends = [input("> ") for _ in range(count)]
+
+        print("Enter the total amount")
+        total_amount_ = int(input("> "))
+
+        print("Do you want yo use the 'Who is lucky?' feature? Write Yes/No:")
+        lucky_ = input("> ")
+        msg = "\nYou should enter Yes or No!"
+        assert lucky_ in ["Yes", "No"], msg
+
+        if lucky_ == "Yes":
+            amount = total_amount(count - 1, total_amount_)
             dict_friends = dict.fromkeys(list_friends, amount)
-            lucky(dict_friends)
+            dict_lucky = random.choice(list_friends)
+            print(f"{dict_lucky} is the lucky one!\n")
+            dict_friends[dict_lucky] = 0
         else:
-            print("No one is joining for the party!")
+            print("No one is going to be lucky")
+            amount = total_amount(count, total_amount_)
+            dict_friends = dict.fromkeys(list_friends, amount)
+        print(dict_friends)
     except ValueError:
         print("You should enter numbers!")
+    except AssertionError as error:
+        print(error)
 
 
 if __name__ == '__main__':
