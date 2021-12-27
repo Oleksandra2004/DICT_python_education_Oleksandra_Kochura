@@ -12,18 +12,23 @@ def win(a, b):
 
 
 def main():
-    try:
+    while True:
         option = ["rock", "scissors", "paper"]
         option_r = random.choice(option)
-        user = input("> ")
-        msg = "You should enter 'rock', 'paper' or 'scissors'"
-        assert user in option, msg
-        if user == option_r:
-            print(f"There is a draw ({option_r})")
-        else:
-            win(user, option_r)
-    except AssertionError as error:
-        print(error)
+        try:
+            user = input("> ")
+            assert user in ["rock", "scissors", "paper", "!exit"]
+
+            if user in option:
+                if user == option_r:
+                    print(f"There is a draw ({option_r})")
+                else:
+                    win(user, option_r)
+            else:
+                print("Bye!")
+                break
+        except AssertionError:
+            print("Invalid input")
 
 
 if __name__ == '__main__':
