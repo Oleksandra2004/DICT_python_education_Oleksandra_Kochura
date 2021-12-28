@@ -1,60 +1,98 @@
 import random
 
-
-name = input("Enter your name:> ")
-print(f"Hello, {name}")
-
-ratings_dict = {}
+rating_dict = {}
 score = 0
+name = input("Enter your name:> ")
+win_combinations = {"rock": ["fire", "scissors", "snake", "human", "tree", "wolf", "sponge"],
+                    "fire": ["scissors", "snake", "human", "tree", "wolf", "sponge", "paper"],
+                    "scissors": ["snake", "human", "tree", "wolf", "sponge", "paper", "air"],
+                    "snake": ["human", "tree", "wolf", "sponge", "paper", "air", "water"],
+                    "human": ["tree", "wolf", "sponge", "paper", "air", "water", "dragon"],
+                    "tree": ["wolf", "sponge", "paper", "air", "water", "dragon", "devil"],
+                    "wolf": ["sponge", "paper", "air", "water", "dragon", "devil", "lightning"],
+                    "sponge": ["paper", "air", "water", "dragon", "devil", "lightning", "gun"],
+                    "paper": ["air", "water", "dragon", "devil", "lightning", "gun", "rock"],
+                    "air": ["water", "dragon", "devil", "lightning", "gun", "rock", "fire"],
+                    "water": ["dragon", "devil", "lightning", "gun", "rock", "fire", "scissors"],
+                    "dragon": ["devil", "lightning", "gun", "rock", "fire", "scissors", "snake"],
+                    "devil": ["lightning", "gun", "rock", "fire", "scissors", "snake", "human"],
+                    "lightning": ["gun", "rock", "fire", "scissors", "snake", "human", "tree"],
+                    "gun": ["rock", "fire", "scissors", "snake", "human", "tree", "wolf"]}
 
-with open('rating.txt', 'r') as ratings:
-    for line in ratings:
-        ratings_dict[line.split(" ")[0]] = line.split(" ")[1].strip()
 
-if name in ratings_dict.keys():
-    score = int(ratings_dict[name])
-ratings.close()
+def create_file(filename_):
+    file = open(filename_, "x")
+    file.close()
 
 
-def win(a, b):
+def get_user_rating():
+    filename = "rating.txt"
+    while True:
+        try:
+            with open(filename, "r") as reader:
+                for line in reader:
+                    rating_dict[line.split(" ")[0]] = line.split(" ")[1].strip()
+                if name in rating_dict.keys():
+                    return int(rating_dict[name])
+            return 0
+        except FileNotFoundError:
+            create_file(filename)
+            continue
+
+
+def write_rating(name_, score_):
+    filename = "rating.txt"
+    while True:
+        try:
+            with open(filename, "r+") as writer:
+                writer.writelines(f"{name_} {score_}")
+                break
+        except FileNotFoundError:
+            create_file(filename)
+            continue
+
+
+def check_winner(player, cpu):
     global score
-    p = "paper"
-    r = "rock"
-    s = "scissors"
-    if (a == p and b == r) or (a == s and b == p) or (a == r and b == s):
-        print(f"Well done. The computer chose {b} and failed")
-        score += 100
+    if player == cpu:
+        print(f"There is a draw {cpu}")
+        score += 50
+    elif player in win_combinations[cpu]:
+        print(f"Sorry, but the computer chose {cpu}")
     else:
-        print(f"Sorry, but the computer chose {b}")
+        print(f"Well done. The computer chose {cpu} and failed")
+        score += 100
 
 
 def main():
     global score
+    print(f"Hello, {name}")
+    user_values = input("Enter possible values, separated by commas\n> ").split(",")
+    print("Okay, let's start")
+    msg = "Invalid input"
     while True:
-        option = ["rock", "scissors", "paper"]
-        option_r = random.choice(option)
-
         try:
-            user = input("> ")
-            assert user in ["rock", "scissors", "paper", "!exit", "!rating"]
-
-            if user in option:
-                if user == option_r:
-                    print(f"There is a draw ({option_r})")
-                    score += 50
-                else:
-                    win(user, option_r)
-            elif user == "!rating":
-                with open('rating.txt', 'r+') as writer:
-                    writer.write(f"{name} {score}")
-                writer.close()
-                print(score)
+            score = get_user_rating()
+            list_of_values = []
+            user_input = input()
+            if len(user_values) > 0 and "" not in user_values:
+                list_of_values.extend(user_values)
             else:
+                list_of_values = ["rock", "paper", "scissors"]
+            assert user_input in [*list_of_values, "!exit", "!rating"], msg
+            cpu_choice = random.choice(list_of_values)
+            if user_input == "!exit":
+                write_rating(name, score)
                 print("Bye!")
                 break
-        except AssertionError:
-            print("Invalid input")
+            elif user_input == "!rating":
+                print(f"Your score: {score}")
+                continue
+            check_winner(user_input, cpu_choice)
+            write_rating(name, score)
+        except AssertionError as error:
+            print(error)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
